@@ -1,0 +1,500 @@
+import React, { useState, useEffect } from "react";
+import {
+    View, Text, TextInput, StyleSheet, TouchableOpacity,
+    Image, Alert, ScrollView, Platform, ActivityIndicator
+} from "react-native";
+import { getAuth, onAuthStateChanged, signOut } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import * as ImagePicker from "expo-image-picker";
+import { useNavigation } from "@react-navigation/native";
+import Icon from 'react-native-vector-icons/FontAwesome';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const isIOS = Platform.OS === 'ios';
+
+export default function ProfileScreen() {
+    const [user, setUser] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [updatedUser, setUpdatedUser] = useState({});
+    const navigation = useNavigation();
+    const [loading, setLoading] = useState(true);
+
+    // Animation values
+    const profileScale = useSharedValue(0);
+    const detailsOpacity = useSharedValue(0);
+
+    useEffect(() => {
+        profileScale.value = withTiming(1, { duration: 500 });
+        detailsOpacity.value = withTiming(1, { duration: 700 });
+    }, []);
+
+    useEffect(() => {
+        const authInstance = getAuth();
+        const unsubscribe = onAuthStateChanged(authInstance, async (currentUser) => {
+            if (currentUser) {
+                try {
+                    const userRef = firestore().collection("users").doc(currentUser.uid);
+                    const userDoc = await userRef.get();
+
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        setUser(userData);
+                        setUpdatedUser(userData);
+
+                        if (!userData.phone) {
+                            await userRef.update({ phone: currentUser.phoneNumber });
+                            setUser((prev) => ({ ...prev, phone: currentUser.phoneNumber }));
+                            setUpdatedUser((prev) => ({ ...prev, phone: currentUser.phoneNumber }));
+                        }
+                    } else {
+                        const newUser = {
+                            name: "",
+                            email: currentUser.email || "",
+                            dob: "",
+                            gender: "",
+                            address: "",
+                            barangay: "",
+                            phone: currentUser.phoneNumber || "",
+                            profilePicture: "",
+                            occupation: "",
+                            nationality: "",
+                            Name: "",
+                            Phone: "",
+                            Relationship: "",
+                        };
+
+                        await userRef.set(newUser);
+                        setUser(newUser);
+                        setUpdatedUser(newUser);
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    Alert.alert("Error", "Failed to load profile. Please try again.");
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setUser(null);
+                navigation.replace("Login");
+            }
+        });
+
+        return unsubscribe;
+    }, [navigation]);
+
+    const handleLogout = async () => {
+        Alert.alert(
+            "Confirm Logout",
+            "Are you sure you want to log out?",
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel",
+                },
+                {
+                    text: "Logout",
+                    onPress: async () => {
+                        try {
+                            const authInstance = getAuth();
+                            if (authInstance.currentUser) {
+                                await signOut(authInstance);
+                                Alert.alert("Logged Out", "You have been successfully logged out.");
+                            }
+                        } catch (error) {
+                            console.log("Error during Logout: ", error);
+                            Alert.alert("Logout Error", error.message);
+                        }
+                    },
+                    style: "destructive",
+                }
+            ]
+        );
+    };
+
+    const handleProfilePictureUpdate = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+            Alert.alert("Permission Required", "You need to grant gallery access to update your profile picture.");
+            return;
+        }
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.7, // Reduced quality for performance
+        });
+        if (!result.canceled) {
+            setUpdatedUser((prevUser) => ({ ...prevUser, profilePicture: result.assets[0].uri }));
+        }
+    };
+
+    const handleEditPress = () => {
+        if (isEditing) handleSaveChanges();
+        setIsEditing(!isEditing);
+    };
+
+    const handleSaveChanges = async () => {
+        const authInstance = getAuth();
+        const currentUser = authInstance.currentUser;
+        if (currentUser) {
+            try {
+                await firestore().collection("users").doc(currentUser.uid).update(updatedUser);
+                setUser(updatedUser);
+                Alert.alert("Profile Updated", "Your profile has been successfully updated.");
+            } catch (error) {
+                console.log("Error updating profile:", error);
+                Alert.alert("Error", "Failed to update profile. Please try again.");
+            }
+        }
+    };
+
+    const getIconName = (field) => {
+        switch (field) {
+            case 'name': return 'user';
+            case 'email': return 'envelope';
+            case 'dob': return 'calendar';
+            case 'gender': return 'venus-mars';
+            case 'address': return 'home';
+            case 'barangay': return 'map-marker';
+            case 'phone': return 'phone';
+            case 'occupation': return 'briefcase';
+            case 'nationality': return 'flag';
+            case 'Name': return 'user-md';
+            case 'Phone': return 'phone';
+            case 'Relationship': return 'handshake';
+            default: return 'question';
+        }
+    };
+
+    const animatedProfileStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ scale: profileScale.value }],
+        };
+    });
+
+    const animatedDetailsStyle = useAnimatedStyle(() => {
+        return {
+            opacity: detailsOpacity.value,
+        };
+    });
+
+    const userDetailsFields = ["name", "email", "dob", "gender", "address", "barangay", "phone", "occupation", "nationality"];
+    const emergencyContactFields = ["Name", "Phone", "Relationship"];
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#007bff" />
+                <Text style={styles.loadingText}>Loading profile...</Text>
+            </View>
+        );
+    }
+
+    return (
+        <LinearGradient colors={['#E0F7FA', '#C5CAE9']} style={styles.gradientContainer}>
+            <ScrollView contentContainerStyle={styles.container}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Profile</Text>
+                </View>
+
+                {user ? (
+                    <>
+                        {/* Profile Section */}
+                        <Animated.View style={[styles.profileSection, animatedProfileStyle]}>
+                            <Image
+                                source={{ uri: updatedUser.profilePicture || "https://via.placeholder.com/150" }}
+                                style={styles.profileImage}
+                            />
+                            <TouchableOpacity
+                                style={styles.uploadButton}
+                                onPress={handleProfilePictureUpdate}
+                            >
+                                <Icon name="upload" size={20} color="white" style={styles.uploadIcon} />
+                                <Text style={styles.uploadText}>Upload Profile Picture</Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+
+                        {/* User Details Section */}
+                        <Animated.View style={[styles.section, animatedDetailsStyle]}>
+                            <Text style={styles.sectionTitle}>User Details</Text>
+                            {isEditing ? (
+                                userDetailsFields.map((field) => (
+                                    <View key={field} style={styles.inputContainer}>
+                                        <Icon
+                                            name={getIconName(field)}
+                                            size={20}
+                                            color="#888"
+                                            style={styles.icon}
+                                        />
+                                        <TextInput
+                                            style={styles.input}
+                                            value={updatedUser[field]}
+                                            onChangeText={(text) => setUpdatedUser({ ...updatedUser, [field]: text })}
+                                            placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                                            keyboardType={field === "phone" ? "phone-pad" : "default"}
+                                            editable={field !== "phone"} // Make phone non-editable
+                                        />
+                                    </View>
+                                ))
+                            ) : (
+                                userDetailsFields.map((field) => (
+                                    <View key={field} style={styles.detailsContainer}>
+                                        <Icon
+                                            name={getIconName(field)}
+                                            size={20}
+                                            color="#888"
+                                            style={styles.icon}
+                                        />
+                                        <Text style={styles.details}>
+                                            <Text style={styles.label}>
+                                                {field.charAt(0).toUpperCase() + field.slice(1)}:
+                                            </Text>
+                                            {user[field]}
+                                        </Text>
+                                    </View>
+                                ))
+                            )}
+                        </Animated.View>
+
+
+                        {/* Emergency Contact Section */}
+
+                        <Animated.View style={[styles.section, animatedDetailsStyle]}>
+                            <Text style={styles.sectionTitle}>Emergency Contact</Text>
+                            {isEditing ? (
+                                emergencyContactFields.map((field) => (
+                                    <View key={field} style={styles.inputContainer}>
+                                        <Icon
+                                            name={getIconName(field)}
+                                            size={20}
+                                            color="#888"
+                                            style={styles.icon}
+                                        />
+                                        <TextInput
+                                            style={styles.input}
+                                            value={updatedUser[field]}
+                                            onChangeText={(text) => setUpdatedUser({ ...updatedUser, [field]: text })}
+                                            placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                                            keyboardType={field === "phone" ? "phone-pad" : "default"}
+                                        />
+                                    </View>
+                                ))
+                            ) : (
+                                emergencyContactFields.map((field) => (
+                                    <View key={field} style={styles.detailsContainer}>
+                                        <Icon
+                                            name={getIconName(field)}
+                                            size={20}
+                                            color="#888"
+                                            style={styles.icon}
+                                        />
+                                        <Text style={styles.details}>
+                                            <Text style={styles.label}>
+                                                {field.charAt(0).toUpperCase() + field.slice(1)}:
+                                            </Text>
+                                            {user[field]}
+                                        </Text>
+                                    </View>
+                                ))
+                            )}
+                            {isEditing && (
+                                <View style={styles.noteContainer}>
+                                    <Text style={styles.noteText}>
+                                        Please ensure the emergency contact details are accurate and up-to-date.
+                                    </Text>
+                                </View>
+                            )}
+                        </Animated.View>
+
+
+                        {/* Buttons Section */}
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity onPress={handleEditPress} style={styles.editButton}>
+                                <Text style={styles.editText}>{isEditing ? "Save Changes" : "Edit Profile"}</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                                <Text style={styles.logoutText}>Logout</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </>
+                ) : (
+                    <Text>Loading profile...</Text>
+                )}
+            </ScrollView>
+        </LinearGradient>
+    );
+}
+
+const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#555',
+    },
+    gradientContainer: {
+        flex: 1,
+    },
+    container: {
+        flexGrow: 1,
+        paddingHorizontal: 24,
+        paddingVertical: 20,
+    },
+    header: {
+        backgroundColor: 'rgba(255,255,255,0.7)',
+        paddingVertical: 20,
+        alignItems: "center",
+        marginBottom: 20,
+        borderRadius: 10,
+    },
+    headerTitle: {
+        color: "#333",
+        fontSize: 22,
+        fontWeight: "bold",
+    },
+    profileSection: {
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 15,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3, // Reduced elevation for Android
+        alignItems: 'center',
+    },
+    profileImage: {
+        width: 130,
+        height: 130,
+        borderRadius: 65,
+        marginBottom: 16,
+        borderWidth: 2,
+        borderColor: "#ddd",
+        backgroundColor: "#e0e0e0",
+    },
+    uploadButton: {
+        backgroundColor: "#28a745",
+        padding: 10,
+        borderRadius: 5,
+        alignItems: "center",
+        flexDirection: 'row',
+        justifyContent: 'center',
+        width: '80%',
+    },
+    uploadIcon: {
+        marginRight: 5,
+    },
+    uploadText: {
+        color: "white",
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+    section: {
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 15,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3, // Reduced elevation for Android
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 10,
+        color: '#333',
+        textAlign: 'left',
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        marginBottom: 10,
+        backgroundColor: 'rgba(255,255,255,0.7)', // Input background
+    },
+    icon: {
+        marginRight: 10,
+        color: '#888',
+        width: 20,
+        alignItems: 'center',
+    },
+    input: {
+        flex: 1,
+        paddingVertical: 10,
+        fontSize: 16,
+        backgroundColor: 'transparent',
+    },
+    detailsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    details: {
+        fontSize: 16,
+        color: '#333',
+        flexShrink: 1,
+        marginLeft: 5,
+    },
+    label: {
+        fontWeight: "bold",
+        marginRight: 5,
+        color: '#555',
+    },
+    buttonContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: 20,
+    },
+    editButton: {
+        backgroundColor: "#007bff",
+        padding: 12,
+        borderRadius: 5,
+        flex: 1,
+        alignItems: "center",
+        marginRight: 10,
+    },
+    logoutButton: {
+        backgroundColor: "#dc3545",
+        padding: 12,
+        borderRadius: 5,
+        flex: 1,
+        alignItems: "center",
+    },
+    editText: {
+        color: "white",
+        fontSize: 18,
+        fontWeight: "bold",
+    },
+    logoutText: {
+        color: "white",
+        fontSize: 18,
+        fontWeight: "bold",
+    },
+    uploadIcon: {
+        marginRight: 5,
+    },
+    noteContainer: {
+        paddingVertical: 10,
+        backgroundColor: '#f7f7f7',
+        borderRadius: 5,
+        marginTop: 10,
+    },
+    noteText: {
+        fontSize: 14,
+        color: '#666',
+    },
+    
+});

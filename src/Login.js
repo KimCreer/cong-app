@@ -1,8 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { View, Text, Alert, StyleSheet, Dimensions, Image } from "react-native";
+import { TextInput, Button, ActivityIndicator, Card } from "react-native-paper";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { useNavigation } from "@react-navigation/native";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+
+const { width, height } = Dimensions.get("window");
 
 export default function Login() {
     const [phoneNumber, setPhoneNumber] = useState("");
@@ -12,7 +16,7 @@ export default function Login() {
     const navigation = useNavigation();
 
     const signInWithPhoneNumber = async () => {
-        if (!phoneNumber.trim()) {
+        if (!phoneNumber.trim() || phoneNumber.length < 10) {
             Alert.alert("Error", "Please enter a valid phone number.");
             return;
         }
@@ -54,86 +58,108 @@ export default function Login() {
     };
 
     return (
-        <View style={{ flex: 1, padding: 10, backgroundColor: "#BEBDB8", alignItems: "center" }}>
-            <Text style={{ fontSize: 28, fontWeight: "bold", marginBottom: 40, marginTop: 100, textAlign: "center" }}>
-                Phone Number Authentication
-            </Text>
+        <View style={styles.container}>
+            <Card style={styles.card}>
+                <Card.Content>
+                    {/* Logo */}
+                    <View style={styles.logoContainer}>
+                        <Image source={require("../assets/cong.png")} style={styles.logo} />
+                    </View>
 
-            {!confirm ? (
-                <>
-                    <Text style={{ marginBottom: 20, fontSize: 18 }}>Enter your Phone Number:</Text>
+                    {/* Title & Subtitle */}
+                    <Text style={styles.title}>Cong. Jimmy App</Text>
+                    <Text style={styles.subtitle}>Ex. +19062966623</Text>
+
                     <TextInput
-                        style={{
-                            height: 50,
-                            width: "90%",
-                            borderColor: "black",
-                            borderWidth: 1,
-                            marginBottom: 30,
-                            paddingHorizontal: 10,
-                            borderRadius: 5,
-                            backgroundColor: "white",
-                        }}
-                        placeholder="e.g., +1 650-555-3434"
-                        value={phoneNumber}
-                        onChangeText={setPhoneNumber}
-                        keyboardType="phone-pad"
+                        label={!confirm ? "Phone Number" : "Enter OTP Code"}
+                        mode="outlined"
+                        value={!confirm ? phoneNumber : code}
+                        onChangeText={!confirm ? setPhoneNumber : setCode}
+                        keyboardType={!confirm ? "phone-pad" : "number-pad"}
+                        autoCompleteType={!confirm ? "tel" : "sms-otp"} // iOS fix
+                        textContentType={!confirm ? "telephoneNumber" : "oneTimeCode"} // iOS OTP Fix
+                        left={
+                            <TextInput.Icon
+                                icon={() => (
+                                    <MaterialCommunityIcons
+                                        name={!confirm ? "phone" : "lock"}
+                                        size={24}
+                                    />
+                                )}
+                            />
+                        }
+                        blurOnSubmit={false} // iOS fix for OTP input
+                        style={styles.input}
                     />
-                    <TouchableOpacity
-                        onPress={signInWithPhoneNumber}
-                        style={{
-                            backgroundColor: "#841584",
-                            padding: 12,
-                            borderRadius: 5,
-                            marginBottom: 20,
-                            alignItems: "center",
-                            width: "90%",
-                            opacity: loading ? 0.7 : 1,
-                        }}
+
+                    {/* Button with Activity Indicator */}
+                    <Button
+                        mode="contained"
+                        onPress={!confirm ? signInWithPhoneNumber : confirmCode}
+                        style={styles.button}
                         disabled={loading}
                     >
-                        <Text style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>
-                            {loading ? "Sending..." : "Send Code"}
-                        </Text>
-                    </TouchableOpacity>
-                </>
-            ) : (
-                <>
-                    <Text style={{ marginBottom: 20, fontSize: 18 }}>Enter the code sent to your phone:</Text>
-                    <TextInput
-                        style={{
-                            height: 50,
-                            width: "90%",
-                            borderColor: "black",
-                            borderWidth: 1,
-                            marginBottom: 30,
-                            paddingHorizontal: 10,
-                            borderRadius: 5,
-                            backgroundColor: "white",
-                        }}
-                        placeholder="Enter code"
-                        value={code}
-                        onChangeText={setCode}
-                        keyboardType="number-pad"
-                    />
-                    <TouchableOpacity
-                        onPress={confirmCode}
-                        style={{
-                            backgroundColor: "#841584",
-                            padding: 12,
-                            borderRadius: 5,
-                            marginBottom: 20,
-                            alignItems: "center",
-                            width: "90%",
-                            opacity: loading ? 0.7 : 1,
-                        }}
-                        disabled={loading}
-                    >
-                        <Text style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>
-                            {loading ? "Verifying..." : "Confirm Code"}
-                        </Text>
-                    </TouchableOpacity>
-                </>
-            )}
+                        {loading ? <ActivityIndicator color="white" size="small" /> : !confirm ? "Send Code" : "Confirm Code"}
+                    </Button>
+                </Card.Content>
+            </Card>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#003366",
+        paddingHorizontal: 20,
+        paddingVertical: height * 0.1,
+    },
+    card: {
+        width: width * 0.9,
+        padding: 25,
+        borderRadius: 12,
+        backgroundColor: "#FFD700",
+        alignItems: "center",
+    },
+    logoContainer: {
+        alignItems: "center",
+        marginBottom: 10,
+        marginLeft: 10,
+    },
+    logo: {
+        width: 80,
+        height: 80,
+        resizeMode: "contain",
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: "bold",
+        textAlign: "center",
+        color: "#003366",
+        width: "100%",
+        marginRight: 50,
+    },
+    subtitle: {
+        fontSize: 14,
+        textAlign: "center",
+        color: "#555",
+        marginBottom: 10,
+        width: "100%",
+    },
+    input: {
+        width: "100%",
+        marginBottom: 15,
+        backgroundColor: "white",
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        fontSize: 16,
+    },
+    button: {
+        backgroundColor: "#003366",
+        marginTop: 10,
+        paddingVertical: 8,
+        width: "100%",
+    },
+});

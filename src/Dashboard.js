@@ -1,52 +1,26 @@
-import React, { useState } from "react";
-import {View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import auth from "@react-native-firebase/auth";
-import { useNavigation } from "@react-navigation/native";
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { FontAwesome5 } from "@expo/vector-icons";
+import LawsScreen from "../src/screens/LawsScreen";
+import ProjectsScreen from "../src/screens/ProjectsScreen";
+import ConcernsScreen from "../src/screens/ConcernsScreen";
+import UpdatesScreen from "../src/screens/UpdatesScreen";
+import InfoScreen from "../src/screens/InfoScreen";
+import ProfileScreen from "../src/screens/ProfileScreen";
 
-export default function Dashboard(){
-    const navigation = useNavigation();
+const Tab = createBottomTabNavigator();
 
-    const handleLogout = async () => {
-        try{
-            await auth().signOut();
-
-            // Reset the Navigation stack to 'Login' and remove the OTP-related screens
-            navigation.reset({
-                index:0,
-                routes: [{ name: "Login" }],
-            });
-        } catch (error){
-            console.log("Error during Logout: ", error);
-        }
-    };
-
+function Dashboard() {
     return (
-        <View style={{flex:1, padding:10, backgroundColor:"#BEBDB8" }}>
-            <Text
-            style={{
-                fontSize: 32,
-                fontWeight:"bold",
-                marginBottom:40,
-                marginTop:150,
-            }}
-            >
-                Welcome to the Dashboard
-            </Text>
-        
-            <TouchableOpacity
-            onPress={handleLogout}
-            style={{
-                backgroundColor:"#841584",
-                padding:10,
-                borderRadius:5,
-                marginBottom:20,
-                alignItems:"center",
-            }}
-            >
-                <Text style={{ color:"white", fontSize:22,fontWeight:"bold" }}>
-                    Logout
-                </Text>
-            </TouchableOpacity>
-            </View>
-    ); 
+        <Tab.Navigator screenOptions={{ headerShown: false }}>
+            <Tab.Screen name="Laws" component={LawsScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="balance-scale" size={size} color={color} />) }} />
+            <Tab.Screen name="Projects" component={ProjectsScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="tasks" size={size} color={color} />) }} />
+            <Tab.Screen name="Concerns" component={ConcernsScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="comments" size={size} color={color} />) }} />
+            <Tab.Screen name="Updates" component={UpdatesScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="newspaper" size={size} color={color} />) }} />
+            <Tab.Screen name="Info" component={InfoScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="info-circle" size={size} color={color} />) }} />
+            <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="user" size={size} color={color} />) }} />
+        </Tab.Navigator>
+    );
 }
+
+export default Dashboard;
