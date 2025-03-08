@@ -22,8 +22,19 @@ export default function Login() {
         }
         try {
             setLoading(true);
-            const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
-            setConfirm(confirmation);
+            // Check if the user already exists in Firestore
+            const userDocument = await firestore().collection("users").where("phoneNumber", "==", phoneNumber).get();
+
+            if (!userDocument.empty) {
+                // User exists; skip SMS and log them in directly
+                const userCredential = await auth().signInWithPhoneNumber(phoneNumber);
+                const user = userCredential.user;
+                navigation.navigate("Dashboard");
+            } else {
+                // User does not exist; send verification code
+                const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+                setConfirm(confirmation);
+            }
         } catch (error) {
             Alert.alert("Error", "Failed to send verification code. Please try again.");
             console.log("Error Sending Code:", error);
