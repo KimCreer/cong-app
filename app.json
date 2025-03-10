@@ -51,9 +51,12 @@
         "projectId": "9f670d69-c1bd-428c-8f91-470eaa7b613b"
       }
     },
+
     "runtimeVersion": {
+
       "policy": "sdkVersion"
     },
+
     "jsEngine": "hermes"
   }
 }
