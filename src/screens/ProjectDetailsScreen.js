@@ -1,5 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Share, Dimensions } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+    View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Share, Dimensions, ActivityIndicator, Alert
+} from "react-native";
 import { Button, Chip, ProgressBar, Card } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Carousel from "react-native-reanimated-carousel";
@@ -8,7 +10,34 @@ import relatedProjects from "../../projectsData";
 const { width } = Dimensions.get("window");
 
 export default function ProjectDetailsScreen({ route, navigation }) {
-    const { project } = route.params;
+    const { project: initialProject } = route.params;
+
+    // State variables
+    const [project, setProject] = useState(initialProject);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchProjectDetails = async () => {
+            setLoading(true);
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // In a real app, you'd fetch the project details by ID
+                // For now, just keep the initial project
+                setProject(initialProject); // Or fetch from API here
+
+            } catch (err) {
+                setError("Failed to load project details.");
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProjectDetails();
+    }, [initialProject]);
 
     const handleShare = async () => {
         try {
@@ -16,9 +45,32 @@ export default function ProjectDetailsScreen({ route, navigation }) {
                 message: `${project.title}\n${project.description}\nProgress: ${Math.round(project.progress * 100)}% Completed`,
             });
         } catch (error) {
+            Alert.alert("Share failed", "Could not share project.");
             console.error("Error sharing project:", error);
         }
     };
+
+    // Loading State
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#003366" />
+                <Text style={styles.loadingText}>Loading project details...</Text>
+            </View>
+        );
+    }
+
+    // Error State
+    if (error) {
+        return (
+            <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                <Button mode="contained" onPress={() => navigation.goBack()} style={styles.backButton}>
+                    Back to Projects
+                </Button>
+            </View>
+        );
+    }
 
     return (
         <ScrollView style={styles.container}>
@@ -53,26 +105,15 @@ export default function ProjectDetailsScreen({ route, navigation }) {
                     {project.status}
                 </Chip>
             </View>
-{/* Additional Project Details */}
-<View style={styles.detailContainer}>
-    <View style={styles.detailRow}>
-        <Icon name="map-marker" size={18} color="#003366" />
-        <Text style={styles.detailText}> Location: {project.location || "Not specified"}</Text>
-    </View>
-    <View style={styles.detailRow}>
-        <Icon name="cash" size={18} color="#003366" />
-        <Text style={styles.detailText}> Budget: {project.budget ? `${project.budget.toLocaleString()}` : "Not specified"}</Text>
-    </View>
-    <View style={styles.detailRow}>
-        <Icon name="account-group" size={18} color="#003366" />
-        <Text style={styles.detailText}>
-            {" "}
-            Stakeholders: {Array.isArray(project.stakeholders) && project.stakeholders.length > 0
-                ? project.stakeholders.join(", ")
-                : "Not specified"}
-        </Text>
-    </View>
-</View>
+
+            {/* Additional Project Details */}
+            <View style={styles.detailContainer}>
+                <DetailRow icon="map-marker" label="Location" value={project.location} />
+                <DetailRow icon="cash" label="Budget" value={project.budget} format="currency" />
+                <DetailRow icon="account-group" label="Stakeholders" value={project.stakeholders} format="list" />
+                <DetailRow icon="calendar" label="Start Date" value={project.startDate} />
+                <DetailRow icon="calendar-check" label="End Date" value={project.endDate} />
+            </View>
 
             {/* Description */}
             <Text style={styles.description}>{project.description}</Text>
@@ -108,6 +149,27 @@ export default function ProjectDetailsScreen({ route, navigation }) {
         </ScrollView>
     );
 }
+
+// Custom DetailRow Component
+const DetailRow = ({ icon, label, value, format }) => {
+    let formattedValue = value || "Not specified";
+
+    if (value) {
+        if (format === "currency" && typeof value === 'number') {
+            formattedValue = value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        } else if (format === "list" && Array.isArray(value)) {
+            formattedValue = value.join(", ") || "Not specified";
+        }
+    }
+
+    return (
+        <View style={styles.detailRow}>
+            <Icon name={icon} size={18} color="#003366" />
+            <Text style={styles.detailText}> {label}: {formattedValue}</Text>
+        </View>
+    );
+};
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -255,5 +317,29 @@ const styles = StyleSheet.create({
         height: 120,
         borderTopLeftRadius: 12,
         borderTopRightRadius: 12,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#f5f5f5",
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: "#003366",
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+        backgroundColor: "#f5f5f5",
+    },
+    errorText: {
+        fontSize: 18,
+        color: "#FF0000",
+        marginBottom: 20,
+        textAlign: "center",
     },
 });

@@ -20,29 +20,44 @@ export default function Login() {
             Alert.alert("Error", "Please enter a valid phone number.");
             return;
         }
+        
         try {
             setLoading(true);
-            // Check if the user already exists in Firestore
-            const userDocument = await firestore().collection("users").where("phoneNumber", "==", phoneNumber).get();
-
-            if (!userDocument.empty) {
-                // User exists; skip SMS and log them in directly
-                const userCredential = await auth().signInWithPhoneNumber(phoneNumber);
-                const user = userCredential.user;
-                navigation.navigate("Dashboard");
-            } else {
-                // User does not exist; send verification code
-                const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
-                setConfirm(confirmation);
+    
+            // Check in "admins" collection
+            const adminQuery = await firestore().collection("admins")
+                .where("phone", "==", phoneNumber).get();
+    
+            if (!adminQuery.empty) {
+                // Admin found, log in directly
+                Alert.alert("Welcome!", "Logging in as Admin...");
+                navigation.navigate("AdminDashboard");
+                return; // Exit function, no OTP needed
             }
+    
+            // Check in "users" collection
+            const userQuery = await firestore().collection("users")
+                .where("phoneNumber", "==", phoneNumber).get();
+    
+            if (!userQuery.empty) {
+                // User found, log in directly
+                Alert.alert("Welcome!", "Logging in as User...");
+                navigation.navigate("Dashboard");
+                return; // Exit function, no OTP needed
+            }
+    
+            // If not found in both collections, send OTP for new users
+            const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+            setConfirm(confirmation);
+    
         } catch (error) {
-            Alert.alert("Error", "Failed to send verification code. Please try again.");
-            console.log("Error Sending Code:", error);
+            Alert.alert("Error", "Failed to check user data. Please try again.");
+            console.log("Error:", error);
         } finally {
             setLoading(false);
         }
     };
-
+    
     const confirmCode = async () => {
         if (!code.trim()) {
             Alert.alert("Error", "Please enter the OTP code.");
@@ -53,10 +68,15 @@ export default function Login() {
             const userCredential = await confirm.confirm(code);
             const user = userCredential.user;
 
+            // Check if user exists in Firestore and get role
             const userDocument = await firestore().collection("users").doc(user.uid).get();
-
             if (userDocument.exists) {
-                navigation.navigate("Dashboard");
+                const userData = userDocument.data();
+                if (userData.role === 'admin') {
+                    navigation.navigate("AdminDashboard");
+                } else {
+                    navigation.navigate("Dashboard");
+                }
             } else {
                 navigation.navigate("Detail", { uid: user.uid });
             }
@@ -72,38 +92,23 @@ export default function Login() {
         <View style={styles.container}>
             <Card style={styles.card}>
                 <Card.Content>
-                    {/* Logo */}
                     <View style={styles.logoContainer}>
                         <Image source={require("../assets/cong.png")} style={styles.logo} />
                     </View>
-
-                    {/* Title & Subtitle */}
                     <Text style={styles.title}>Cong. Jimmy App</Text>
                     <Text style={styles.subtitle}>Ex. +19062966623</Text>
-
                     <TextInput
                         label={!confirm ? "Phone Number" : "Enter OTP Code"}
                         mode="outlined"
                         value={!confirm ? phoneNumber : code}
                         onChangeText={!confirm ? setPhoneNumber : setCode}
                         keyboardType={!confirm ? "phone-pad" : "number-pad"}
-                        autoCompleteType={!confirm ? "tel" : "sms-otp"} // iOS fix
-                        textContentType={!confirm ? "telephoneNumber" : "oneTimeCode"} // iOS OTP Fix
-                        left={
-                            <TextInput.Icon
-                                icon={() => (
-                                    <MaterialCommunityIcons
-                                        name={!confirm ? "phone" : "lock"}
-                                        size={24}
-                                    />
-                                )}
-                            />
-                        }
-                        blurOnSubmit={false} // iOS fix for OTP input
+                        autoCompleteType={!confirm ? "tel" : "sms-otp"}
+                        textContentType={!confirm ? "telephoneNumber" : "oneTimeCode"}
+                        left={<TextInput.Icon icon={() => <MaterialCommunityIcons name={!confirm ? "phone" : "lock"} size={24} />} />}
+                        blurOnSubmit={false}
                         style={styles.input}
                     />
-
-                    {/* Button with Activity Indicator */}
                     <Button
                         mode="contained"
                         onPress={!confirm ? signInWithPhoneNumber : confirmCode}

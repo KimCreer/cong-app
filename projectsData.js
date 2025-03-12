@@ -12,7 +12,9 @@ const projects = [
         progress: 1.0,
         location: "Muntinlupa City",
         budget: "₱5M",
-        stakeholders: ["Local Farmers", "City Government", "Agriculture Department"]
+        stakeholders: ["Local Farmers", "City Government", "Agriculture Department"],
+        startDate: "2020-01-15",
+        endDate: "2020-12-10"
     },
     {
         id: 2,
@@ -25,7 +27,9 @@ const projects = [
         progress: 1.0,
         location: "Muntinlupa City",
         budget: "₱20M",
-        stakeholders: ["City Government", "Local Artists", "Historical Society"]
+        stakeholders: ["City Government", "Local Artists", "Historical Society"],
+        startDate: "2019-03-10",
+        endDate: "2021-06-15"
     },
     {
         id: 3,
@@ -38,7 +42,9 @@ const projects = [
         progress: 0.75,
         location: "Barangay Tunasan",
         budget: "₱10M",
-        stakeholders: ["City Health Office", "Barangay Officials", "Medical Volunteers"]
+        stakeholders: ["City Health Office", "Barangay Officials", "Medical Volunteers"],
+        startDate: "2022-05-01",
+        endDate: "TBD"
     },
     {
         id: 4,
@@ -51,7 +57,9 @@ const projects = [
         progress: 1.0,
         location: "Muntinlupa City",
         budget: "₱15M",
-        stakeholders: ["City Government", "Department of Education", "Private Sponsors"]
+        stakeholders: ["City Government", "Department of Education", "Private Sponsors"],
+        startDate: "2018-07-01",
+        endDate: "2022-03-30"
     },
     {
         id: 5,
@@ -64,7 +72,9 @@ const projects = [
         progress: 0.60,
         location: "Alabang-Zapote Road",
         budget: "₱50M",
-        stakeholders: ["DPWH", "City Government", "Local Contractors"]
+        stakeholders: ["DPWH", "City Government", "Local Contractors"],
+        startDate: "2023-01-10",
+        endDate: "TBD"
     },
     {
         id: 6,
@@ -77,7 +87,9 @@ const projects = [
         progress: 0.85,
         location: "Various Barangays",
         budget: "₱8M",
-        stakeholders: ["Environmental Groups", "City Volunteers", "LGU"]
+        stakeholders: ["Environmental Groups", "City Volunteers", "LGU"],
+        startDate: "2023-02-01",
+        endDate: "TBD"
     },
     {
         id: 7,
@@ -90,7 +102,9 @@ const projects = [
         progress: 0.50,
         location: "Muntinlupa City",
         budget: "₱30M",
-        stakeholders: ["City Government", "Local Entrepreneurs", "Finance Institutions"]
+        stakeholders: ["City Government", "Local Entrepreneurs", "Finance Institutions"],
+        startDate: "2023-03-15",
+        endDate: "TBD"
     },
     {
         id: 8,
@@ -103,8 +117,11 @@ const projects = [
         progress: 1.0,
         location: "Citywide",
         budget: "₱40M",
-        stakeholders: ["Bureau of Fire Protection", "City Disaster Office", "LGU"]
+        stakeholders: ["Bureau of Fire Protection", "City Disaster Office", "LGU"],
+        startDate: "2019-06-01",
+        endDate: "2021-12-20"
     },
+
     {
         id: 9,
         title: "Peace and Order and Public Safety Plan",
@@ -116,7 +133,9 @@ const projects = [
         progress: 1.0,
         location: "Muntinlupa City",
         budget: "₱25M",
-        stakeholders: ["PNP", "Barangay Officials", "City Government"]
+        stakeholders: ["PNP", "Barangay Officials", "City Government"],
+        startDate: "2020-01-01",
+        endDate: "2022-12-31"
     },
     {
         id: 10,
@@ -129,8 +148,10 @@ const projects = [
         progress: 0.70,
         location: "Muntinlupa City",
         budget: "₱12M",
-        stakeholders: ["DSWD", "Local Peace Council", "LGU"]
-    },
+        stakeholders: ["DSWD", "Local Peace Council", "LGU"],
+        startDate: "2023-01-01",
+        endDate: "2025-12-31"
+    }    
 ];
 
 export default projects;

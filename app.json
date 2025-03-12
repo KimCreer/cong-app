@@ -41,7 +41,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.allencrer.congapp"
+      "package": "com.allencrer.congapp",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -51,12 +54,10 @@
         "projectId": "9f670d69-c1bd-428c-8f91-470eaa7b613b"
       }
     },
-
     "runtimeVersion": {
-
       "policy": "sdkVersion"
     },
-
-    "jsEngine": "hermes"
+    "jsEngine": "hermes",
+    "owner": "allencrer"
   }
 }

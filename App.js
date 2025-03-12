@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Login from './src/Login';
 import Detail from './src/Detail';
 import Dashboard from './src/Dashboard';
+import AdminDashboard from './src/AdminDashboard'; // Import the AdminDashboard
 import ProjectsScreen from './src/screens/ProjectsScreen';
 import ProjectDetailsScreen from './src/screens/ProjectDetailsScreen'; // Import the screen
 
@@ -27,6 +28,11 @@ export default function App() {
         <Stack.Screen 
           name="Dashboard" 
           component={Dashboard} 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="AdminDashboard"  // Add AdminDashboard here
+          component={AdminDashboard} 
           options={{ headerShown: false }} 
         />
         <Stack.Screen 

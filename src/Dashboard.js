@@ -1,12 +1,12 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { FontAwesome5 } from "@expo/vector-icons";
-import LawsScreen from "../src/screens/LawsScreen";
-import ProjectsScreen from "../src/screens/ProjectsScreen";
-import ConcernsScreen from "../src/screens/ConcernsScreen";
-import UpdatesScreen from "../src/screens/UpdatesScreen";
-import InfoScreen from "../src/screens/InfoScreen";
-import ProfileScreen from "../src/screens/ProfileScreen";
+import LawsScreen from "./screens/LawsScreen";
+import ProjectsScreen from "./screens/ProjectsScreen";
+import ConcernsScreen from "./screens/ConcernsScreen";
+import UpdatesScreen from "./screens/UpdatesScreen";
+import InfoScreen from "./screens/InfoScreen";
+import ProfileScreen from "./screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
 

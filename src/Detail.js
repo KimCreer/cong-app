@@ -12,6 +12,10 @@ export default function Detail({ route, navigation }) {
     const [gender, setGender] = useState("");
     const [address, setAddress] = useState("");
     const [barangay, setBarangay] = useState("");
+    const [isAdmin, setIsAdmin] = useState(false); // New state for admin registration
+    const [secretKey, setSecretKey] = useState(""); // New state for secret key
+
+    const SECRET_KEY = "yourSecretKey"; // Replace with your actual secret key
 
     const validateInputs = () => {
         if (!name.trim() || !dob.trim() || !gender.trim() || !address.trim() || !barangay.trim()) {
@@ -44,6 +48,12 @@ export default function Detail({ route, navigation }) {
             return false;
         }
 
+        // Check secret key if registering as admin
+        if (isAdmin && secretKey !== SECRET_KEY) {
+            Alert.alert("Error", "Invalid secret key for admin registration.");
+            return false;
+        }
+
         return true;
     };
 
@@ -57,6 +67,7 @@ export default function Detail({ route, navigation }) {
                 gender: gender.trim(),
                 address: address.trim(),
                 barangay: barangay.trim(),
+                isAdmin: isAdmin // Store admin status
             };
 
             if (email.trim()) {
@@ -121,6 +132,19 @@ export default function Detail({ route, navigation }) {
                             </View>
                         </View>
                     </RadioButton.Group>
+
+                    {/* Admin Registration Toggle */}
+                    <TextInput
+                        label="Secret Key for Admin Registration"
+                        mode="outlined"
+                        value={isAdmin ? secretKey : ""}
+                        onChangeText={(text) => {
+                            setIsAdmin(text === SECRET_KEY); // Check if the entered key matches the secret key
+                            setSecretKey(text);
+                        }}
+                        secureTextEntry
+                        style={styles.input}
+                    />
 
                     <TextInput
                         label="Address"

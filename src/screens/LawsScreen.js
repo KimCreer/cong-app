@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import Icon from "react-native-vector-icons/FontAwesome5"; // or MaterialCommunityIcons
+
 import {
   View,
   Text,
@@ -231,7 +233,10 @@ export default function LawsScreen() {
   if (loading) {
     return (
       <View
-        style={[styles.loadingContainer, { backgroundColor: dynamicStyles.backgroundColor }]}
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: dynamicStyles.backgroundColor },
+        ]}
       >
         <ActivityIndicator size="large" color="#003366" />
         <Text style={[styles.loadingText, { color: dynamicStyles.textColor }]}>
@@ -244,7 +249,10 @@ export default function LawsScreen() {
   if (error) {
     return (
       <View
-        style={[styles.errorContainer, { backgroundColor: dynamicStyles.backgroundColor }]}
+        style={[
+          styles.errorContainer,
+          { backgroundColor: dynamicStyles.backgroundColor },
+        ]}
       >
         <Text style={[styles.errorText, { color: dynamicStyles.textColor }]}>
           {error}
@@ -257,19 +265,35 @@ export default function LawsScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: dynamicStyles.backgroundColor }]}>
-      <View style={[styles.container, { backgroundColor: dynamicStyles.backgroundColor }]}>
-        {/* Animated Header */}
-        <Animated.View style={[styles.header, animatedHeaderStyle]}>
-          <Animated.Text
-            style={[
-              styles.headerTitle,
-              { opacity: headerTitleOpacity, textAlign: "center" },
-            ]}
-          >
-            Laws & Legislation
-          </Animated.Text>
-        </Animated.View>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: dynamicStyles.backgroundColor }]}
+    >
+      <View
+        style={[styles.container, { backgroundColor: dynamicStyles.backgroundColor }]}
+      >
+       {/* Animated Header */}
+<Animated.View style={[styles.header, animatedHeaderStyle]}>
+  {/* Indicator dots */}
+  <View style={styles.indicatorContainer}>
+    <View style={[styles.dot, selectedSection === sectionKeys[0] ? styles.activeDot : styles.inactiveDot]} />
+    <View style={[styles.dot, selectedSection === sectionKeys[1] ? styles.activeDot : styles.inactiveDot]} />
+    <View style={[styles.dot, selectedSection === sectionKeys[2] ? styles.activeDot : styles.inactiveDot]} />
+  </View>
+
+  {/* Header with Icon */}
+  <View style={styles.headerContent}>
+    <Icon name="gavel" size={32} color="#ffffff" style={styles.headerIcon} />
+    <Animated.Text
+      style={[
+        styles.headerTitle,
+        { opacity: headerTitleOpacity, textAlign: "center" },
+      ]}
+    >
+      Laws & Legislation
+    </Animated.Text>
+  </View>
+</Animated.View>
+
         {/* Scrollable content */}
         <ScrollView
           ref={scrollViewRef}
@@ -300,24 +324,48 @@ export default function LawsScreen() {
           {/* Mapping through sections */}
           {Object.keys(sections).map((section) => (
             <View key={section} style={styles.page}>
-              <Text style={[styles.sectionTitle, { color: dynamicStyles.textColor }]}>{section}</Text>
+              <Text
+                style={[styles.sectionTitle, { color: dynamicStyles.textColor }]}
+              >
+                {section}
+              </Text>
               <FlatList
                 data={sections[section]}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
-                  <Card style={[styles.card, { backgroundColor: dynamicStyles.cardBackgroundColor }]}>
+                  <Card
+                    style={[
+                      styles.card,
+                      { backgroundColor: dynamicStyles.cardBackgroundColor },
+                    ]}
+                  >
                     <Card.Content>
                       {/* Conditional rendering for Committee Membership */}
                       {section === "Committee Membership" ? (
                         <>
-                          <Text style={[styles.committeeTitle, { color: dynamicStyles.cardTextColor }]}>
+                          <Text
+                            style={[
+                              styles.committeeTitle,
+                              { color: dynamicStyles.cardTextColor },
+                            ]}
+                          >
                             {item.committee}
                           </Text>
-                          <Text style={[styles.lawDetail, { color: dynamicStyles.cardTextColor }]}>
+                          <Text
+                            style={[
+                              styles.lawDetail,
+                              { color: dynamicStyles.cardTextColor },
+                            ]}
+                          >
                             <Text style={styles.boldText}>Position:</Text>
                             {item.position || "N/A"}
                           </Text>
-                          <Text style={[styles.lawDetail, { color: dynamicStyles.cardTextColor }]}>
+                          <Text
+                            style={[
+                              styles.lawDetail,
+                              { color: dynamicStyles.cardTextColor },
+                            ]}
+                          >
                             <Text style={styles.boldText}>
                               Journal Number:
                             </Text>
@@ -325,7 +373,12 @@ export default function LawsScreen() {
                           </Text>
                           {/* Additional details specific to committee */}
                           {item.additionalInfo && (
-                            <Text style={[styles.lawDetail, { color: dynamicStyles.cardTextColor }]}>
+                            <Text
+                              style={[
+                                styles.lawDetail,
+                                { color: dynamicStyles.cardTextColor },
+                              ]}
+                            >
                               <Text style={styles.boldText}>
                                 Additional Info:
                               </Text>
@@ -335,22 +388,49 @@ export default function LawsScreen() {
                         </>
                       ) : (
                         <>
-                          <Text style={[styles.lawTitle, { color: dynamicStyles.cardTextColor }]}>{item.title}</Text>
+                          <Text
+                            style={[
+                              styles.lawTitle,
+                              { color: dynamicStyles.cardTextColor },
+                            ]}
+                          >
+                            {item.title}
+                          </Text>
                           {/* Displaying more details about the bill */}
                           <View style={styles.lawDetailsContainer}>
-                            <Text style={[styles.lawDetail, { color: dynamicStyles.cardTextColor }]}>
+                            <Text
+                              style={[
+                                styles.lawDetail,
+                                { color: dynamicStyles.cardTextColor },
+                              ]}
+                            >
                               <Text style={styles.boldText}>Summary:</Text>
                               {item.summary || "No summary available."}
                             </Text>
-                            <Text style={[styles.lawDetail, { color: dynamicStyles.cardTextColor }]}>
+                            <Text
+                              style={[
+                                styles.lawDetail,
+                                { color: dynamicStyles.cardTextColor },
+                              ]}
+                            >
                               <Text style={styles.boldText}>Significance:</Text>
                               {item.significance || "N/A"}
                             </Text>
-                            <Text style={[styles.lawDetail, { color: dynamicStyles.cardTextColor }]}>
+                            <Text
+                              style={[
+                                styles.lawDetail,
+                                { color: dynamicStyles.cardTextColor },
+                              ]}
+                            >
                               <Text style={styles.boldText}>Date Filed:</Text>
                               {item.dateFiled || "N/A"}
                             </Text>
-                            <Text style={[styles.lawDetail, { color: dynamicStyles.cardTextColor }]}>
+                            <Text
+                              style={[
+                                styles.lawDetail,
+                                { color: dynamicStyles.cardTextColor },
+                              ]}
+                            >
                               <Text style={styles.boldText}>
                                 Principal Author/s:
                               </Text>
@@ -362,7 +442,12 @@ export default function LawsScreen() {
                             {/* Additional details about the bill */}
                             {item.amendments && (
                               <>
-                                <Text style={[styles.lawDetail, { color: dynamicStyles.cardTextColor }]}>
+                                <Text
+                                  style={[
+                                    styles.lawDetail,
+                                    { color: dynamicStyles.cardTextColor },
+                                  ]}
+                                >
                                   <Text style={styles.boldText}>
                                     Amendments:
                                   </Text>
@@ -375,7 +460,13 @@ export default function LawsScreen() {
                               <TouchableOpacity
                                 onPress={() => Linking.openURL(item.fullLink)}
                               >
-                                <Text style={[styles.link, styles.lawDetail, { color: "#007bff" }]}>
+                                <Text
+                                  style={[
+                                    styles.link,
+                                    styles.lawDetail,
+                                    { color: "#007bff" },
+                                  ]}
+                                >
                                   View Full Text of Bill
                                 </Text>
                               </TouchableOpacity>
@@ -395,10 +486,21 @@ export default function LawsScreen() {
                         }
                         style={styles.actionButton}
                       >
-                        <Feather name="share" size={18} color="#007bff" style={{ marginRight: 5 }} />
-                        <Text style={[styles.actionButtonText, { color: "#007bff" }]}>Share</Text>
+                        <Feather
+                          name="share"
+                          size={18}
+                          color="#007bff"
+                          style={{ marginRight: 5 }}
+                        />
+                        <Text
+                          style={[
+                            styles.actionButtonText,
+                            { color: "#007bff" },
+                          ]}
+                        >
+                          Share
+                        </Text>
                       </TouchableOpacity>
-
                       {/* Save button */}
                       <TouchableOpacity
                         onPress={() => saveItem(item.title, item)}
@@ -407,102 +509,92 @@ export default function LawsScreen() {
                       >
                         {isItemSaved(item.title) ? (
                           <>
-                            <MaterialIcons name="bookmark" size={18} color="gray" style={{ marginRight: 5 }} />
-                            <Text style={[styles.actionButtonText, { color: "gray" }]}>Saved</Text>
+                            <MaterialIcons
+                              name="bookmark"
+                              size={18}
+                              color="gray"
+                              style={{ marginRight: 5 }}
+                            />
+                            <Text
+                              style={[
+                                styles.actionButtonText,
+                                { color: "gray" },
+                              ]}
+                            >
+                              Saved
+                            </Text>
                           </>
                         ) : (
                           <>
-                            <MaterialIcons name="bookmark-border" size={18} color="#007bff" style={{ marginRight: 5 }} />
-                            <Text style={[styles.actionButtonText, { color: "#007bff" }]}>Save</Text>
+                            <MaterialIcons
+                              name="bookmark-border"
+                              size={18}
+                              color="#007bff"
+                              style={{ marginRight: 5 }}
+                            />
+                            <Text
+                              style={[
+                                styles.actionButtonText,
+                                { color: "#007bff" },
+                              ]}
+                            >
+                              Save
+                            </Text>
                           </>
                         )}
                       </TouchableOpacity>
                     </Card.Actions>
                   </Card>
                 )}
-                scrollEnabled={!refreshing} // Disable during refresh
-                nestedScrollEnabled // Enable nested scrolling for FlatList
-                contentContainerStyle={{ flexGrow: 1 }} // Add this for better layout handling
               />
             </View>
           ))}
         </ScrollView>
-        {/* Link to view more details */}
-        <TouchableOpacity
-          onPress={() =>
-            Linking.openURL(
-              "https://www.congress.gov.ph/house-members/view/?member=K034&name=Fresnedi%2C+Jaime+R.&page=0"
-            )
-          }
-        >
-          <Text style={[styles.viewMoreLink, { color: dynamicStyles.textColor }]}>View More Details</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
-// Styles
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
   },
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
   },
   header: {
-    backgroundColor: "#003366",
-    paddingVertical: 20,
-    flexDirection: "row",
+    width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 5,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
+    position: "relative",
+    overflow: "hidden",
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "white",
+    paddingVertical: 15,
   },
   contentScrollView: {
     flex: 1,
   },
   page: {
-    width,
-    height: "100%",
-    paddingHorizontal: 10,
+    width: width,
+    padding: 20,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 15,
-    textAlign: "center",
   },
   card: {
-    borderRadius: 12,
-    elevation: 3, // Adding shadow
     marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    backgroundColor: "#fff",
-  },
-  committeeTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#333",
+    elevation: 3,
   },
   lawTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 8,
-    color: "#333",
+    marginBottom: 10,
   },
   lawDetailsContainer: {
     marginBottom: 10,
@@ -510,77 +602,89 @@ const styles = StyleSheet.create({
   lawDetail: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#555",
   },
   boldText: {
     fontWeight: "bold",
-    color: "#333",
   },
   link: {
-    color: "#007bff",
-    textDecorationLine: "underline",
+    marginTop: 5,
+    fontWeight: "bold",
   },
   buttonContainer: {
     justifyContent: "space-around",
-    paddingVertical: 10,
   },
   actionButton: {
-    fontSize: 16,
-    color: "#007bff",
-    fontWeight: "600",
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 15,
     paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#007bff",
+    paddingHorizontal: 12,
+    borderRadius: 5,
   },
   actionButtonText: {
     fontSize: 16,
-    fontWeight: "600",
-  },
-  viewMoreLink: {
-    fontSize: 16,
-    color: "#007bff",
-    textAlign: "center",
-    marginTop: 20,
-    marginBottom: 30,
-    textDecorationLine: "underline",
+    fontWeight: "500",
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
   },
   loadingText: {
-    fontSize: 18,
     marginTop: 10,
-    color: "#555",
+    fontSize: 16,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
-    backgroundColor: "#f9f9f9",
+    padding: 20,
   },
   errorText: {
     fontSize: 18,
-    color: "#cc0000",
-    textAlign: "center",
     marginBottom: 20,
+    textAlign: "center",
   },
   retryButton: {
-    backgroundColor: "#003366",
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 8,
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 5,
   },
   retryButtonText: {
-    color: "#ffffff",
+    color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
+  committeeTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+    indicatorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 10,
+    left: 0,
+    right: 0,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  activeDot: {
+    backgroundColor: '#FFFFFF',
+  },
+  inactiveDot: {
+    backgroundColor: '#888888',
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8, // Adjust spacing between icon and text
+  },
+  
 });
