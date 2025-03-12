@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -11,7 +11,9 @@ import {
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
-import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import LawsScreen from "./screens/LawsScreen";
 import ProjectsScreen from "./screens/ProjectsScreen";
 import ConcernsScreen from "./screens/ConcernsScreen";
@@ -24,19 +26,59 @@ const Stack = createStackNavigator();
 
 function HomeScreen() {
     const navigation = useNavigation();
+    const [userData, setUserData] = useState({
+        name: "User Name",
+        profileImage: "https://via.placeholder.com/50", // Default placeholder
+    });
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const currentUser = auth().currentUser;
+            if (currentUser) {
+                try {
+                    const userDoc = await firestore().collection("users").doc(currentUser.uid).get();
+                    if (userDoc.exists) {
+                        const userInfo = userDoc.data();
+                        console.log("User Data:", userInfo); // Debugging log
+
+                        setUserData({
+                            name: userInfo.name || "User Name",
+                            profileImage:
+                                userInfo.profilePicture && userInfo.profilePicture.trim() !== ""
+                                    ? userInfo.profilePicture
+                                    : "https://via.placeholder.com/50", // Fallback image
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                }
+            }
+        };
+
+        fetchUserData();
+    }, []);
 
     return (
         <SafeAreaView style={styles.safeContainer}>
             {/* HEADER */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
+                    {/* Debugging Log */}
+                    {console.log("Profile Image URL:", userData.profileImage)}
+                    
                     <Image
-                        source={{ uri: "https://via.placeholder.com/40" }}
+                        source={{ uri: userData.profileImage }}
                         style={styles.profileImage}
+                        onError={() =>
+                            setUserData((prev) => ({
+                                ...prev,
+                                profileImage: "https://via.placeholder.com/50", // Fallback image if error
+                            }))
+                        }
                     />
                     <View>
                         <Text style={styles.headerSubtitle}>Welcome Back!</Text>
-                        <Text style={styles.headerTitle}>User Name</Text>
+                        <Text style={styles.headerTitle}>{userData.name}</Text>
                     </View>
                     <TouchableOpacity style={styles.helpButton}>
                         <Text style={styles.helpText}>HELP</Text>
@@ -74,7 +116,7 @@ function HomeScreen() {
                         { name: "Community", icon: "people-outline", screen: "Community" },
                         { name: "Reports", icon: "bar-chart", screen: "Reports" },
                         { name: "Events", icon: "calendar", screen: "Events" },
-                        { name: "Feedback", icon: "feedback", screen: "Feedback" },
+                        { name: "Feedback", icon: "chatbubble-ellipses-outline", screen: "Feedback" }
                     ].map((item, index) => (
                         <TouchableOpacity
                             key={index}
