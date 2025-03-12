@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Alert, StyleSheet, Dimensions, Image } from "react-native";
-import { TextInput, Button, ActivityIndicator, Card } from "react-native-paper";
+import { TextInput, Button, ActivityIndicator } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { useNavigation } from "@react-navigation/native";
@@ -15,41 +16,50 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
 
+    useEffect(() => {
+        checkIfFirstLaunch();
+    }, []);
+
+    const checkIfFirstLaunch = async () => {
+        const hasSeenIntro = await AsyncStorage.getItem("hasSeenIntro");
+        if (!hasSeenIntro) {
+            navigation.replace("Intro");
+        }
+    };
+
     const signInWithPhoneNumber = async () => {
         if (!phoneNumber.trim() || phoneNumber.length < 10) {
             Alert.alert("Error", "Please enter a valid phone number.");
             return;
         }
-        
+
         try {
             setLoading(true);
-    
+
             // Check in "admins" collection
             const adminQuery = await firestore().collection("admins")
                 .where("phone", "==", phoneNumber).get();
-    
+
             if (!adminQuery.empty) {
-                // Admin found, log in directly
                 Alert.alert("Welcome!", "Logging in as Admin...");
                 navigation.navigate("AdminDashboard");
-                return; // Exit function, no OTP needed
+                return;
             }
-    
+
             // Check in "users" collection
             const userQuery = await firestore().collection("users")
                 .where("phoneNumber", "==", phoneNumber).get();
-    
+
             if (!userQuery.empty) {
-                // User found, log in directly
                 Alert.alert("Welcome!", "Logging in as User...");
                 navigation.navigate("Dashboard");
-                return; // Exit function, no OTP needed
+                return;
             }
-    
-            // If not found in both collections, send OTP for new users
+
+            // If not found, send OTP
             const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
             setConfirm(confirmation);
-    
+
         } catch (error) {
             Alert.alert("Error", "Failed to check user data. Please try again.");
             console.log("Error:", error);
@@ -57,7 +67,7 @@ export default function Login() {
             setLoading(false);
         }
     };
-    
+
     const confirmCode = async () => {
         if (!code.trim()) {
             Alert.alert("Error", "Please enter the OTP code.");
@@ -68,15 +78,11 @@ export default function Login() {
             const userCredential = await confirm.confirm(code);
             const user = userCredential.user;
 
-            // Check if user exists in Firestore and get role
+            // Check user role
             const userDocument = await firestore().collection("users").doc(user.uid).get();
             if (userDocument.exists) {
                 const userData = userDocument.data();
-                if (userData.role === 'admin') {
-                    navigation.navigate("AdminDashboard");
-                } else {
-                    navigation.navigate("Dashboard");
-                }
+                navigation.navigate(userData.role === "admin" ? "AdminDashboard" : "Dashboard");
             } else {
                 navigation.navigate("Detail", { uid: user.uid });
             }
@@ -88,37 +94,59 @@ export default function Login() {
         }
     };
 
+    const skipLogin = () => {
+        navigation.navigate("Dashboard");
+    };
+
     return (
         <View style={styles.container}>
-            <Card style={styles.card}>
-                <Card.Content>
-                    <View style={styles.logoContainer}>
-                        <Image source={require("../assets/cong.png")} style={styles.logo} />
-                    </View>
-                    <Text style={styles.title}>Cong. Jimmy App</Text>
-                    <Text style={styles.subtitle}>Ex. +19062966623</Text>
-                    <TextInput
-                        label={!confirm ? "Phone Number" : "Enter OTP Code"}
-                        mode="outlined"
-                        value={!confirm ? phoneNumber : code}
-                        onChangeText={!confirm ? setPhoneNumber : setCode}
-                        keyboardType={!confirm ? "phone-pad" : "number-pad"}
-                        autoCompleteType={!confirm ? "tel" : "sms-otp"}
-                        textContentType={!confirm ? "telephoneNumber" : "oneTimeCode"}
-                        left={<TextInput.Icon icon={() => <MaterialCommunityIcons name={!confirm ? "phone" : "lock"} size={24} />} />}
-                        blurOnSubmit={false}
-                        style={styles.input}
+            <Image source={require("../assets/cong.png")} style={styles.logo} />
+            <Text style={styles.title}>Welcome to MUNTINLUPA DISTRICT OFFICE</Text>
+            <Text style={styles.description}>
+                Securely sign in with your phone number. A one-time password (OTP) will be sent via SMS.
+            </Text>
+
+            <TextInput
+                label={!confirm ? "Phone Number" : "Enter OTP Code"}
+                mode="outlined"
+                value={!confirm ? phoneNumber : code}
+                onChangeText={!confirm ? setPhoneNumber : setCode}
+                keyboardType={!confirm ? "phone-pad" : "number-pad"}
+                autoCompleteType={!confirm ? "tel" : "sms-otp"}
+                textContentType={!confirm ? "telephoneNumber" : "oneTimeCode"}
+                left={
+                    <TextInput.Icon
+                        icon={() => <MaterialCommunityIcons name={!confirm ? "phone" : "lock"} size={24} color="#003580" />}
                     />
-                    <Button
-                        mode="contained"
-                        onPress={!confirm ? signInWithPhoneNumber : confirmCode}
-                        style={styles.button}
-                        disabled={loading}
-                    >
-                        {loading ? <ActivityIndicator color="white" size="small" /> : !confirm ? "Send Code" : "Confirm Code"}
-                    </Button>
-                </Card.Content>
-            </Card>
+                }
+                style={styles.input}
+                outlineColor="#003580"
+                activeOutlineColor="#002B5C"
+            />
+
+            <Button
+                mode="contained"
+                onPress={!confirm ? signInWithPhoneNumber : confirmCode}
+                style={[styles.button, loading && styles.buttonDisabled]}
+                labelStyle={styles.buttonText}
+                disabled={loading}
+            >
+                {loading ? <ActivityIndicator color="white" size="small" /> : !confirm ? "Send Code" : "Verify OTP"}
+            </Button>
+
+            {/* Skip Button */}
+            <Button
+                mode="text"
+                onPress={skipLogin}
+                style={styles.skipButton}
+                labelStyle={styles.skipButtonText}
+            >
+                Skip for Now
+            </Button>
+
+            <Text style={styles.footerText}>
+                Need help? <Text style={styles.link}>Contact Support</Text>
+            </Text>
         </View>
     );
 }
@@ -128,54 +156,70 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#003366",
-        paddingHorizontal: 20,
-        paddingVertical: height * 0.1,
-    },
-    card: {
-        width: width * 0.9,
-        padding: 25,
-        borderRadius: 12,
-        backgroundColor: "#FFD700",
-        alignItems: "center",
-    },
-    logoContainer: {
-        alignItems: "center",
-        marginBottom: 10,
-        marginLeft: 10,
+        backgroundColor: "#F5F7FA",
+        paddingHorizontal: 25,
     },
     logo: {
-        width: 80,
-        height: 80,
+        width: 110,
+        height: 110,
         resizeMode: "contain",
+        marginBottom: 20,
     },
     title: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: "bold",
+        color: "#003580",
         textAlign: "center",
-        color: "#003366",
-        width: "100%",
-        marginRight: 50,
+        marginBottom: 8,
     },
-    subtitle: {
-        fontSize: 14,
+    description: {
+        fontSize: 15,
+        color: "#606060",
         textAlign: "center",
-        color: "#555",
-        marginBottom: 10,
-        width: "100%",
+        marginBottom: 25,
+        paddingHorizontal: 20,
     },
     input: {
         width: "100%",
-        marginBottom: 15,
-        backgroundColor: "white",
-        borderRadius: 10,
-        paddingHorizontal: 10,
+        marginBottom: 18,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 8,
         fontSize: 16,
     },
     button: {
-        backgroundColor: "#003366",
-        marginTop: 10,
-        paddingVertical: 8,
+        backgroundColor: "#FFD700",
+        paddingVertical: 12,
         width: "100%",
+        borderRadius: 10,
+        alignItems: "center",
+        shadowColor: "#FFD700",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+    },
+    buttonDisabled: {
+        backgroundColor: "#D4AF37",
+    },
+    buttonText: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#212529",
+    },
+    skipButton: {
+        marginTop: 10,
+    },
+    skipButtonText: {
+        fontSize: 16,
+        color: "#003580",
+        fontWeight: "bold",
+    },
+    footerText: {
+        marginTop: 20,
+        fontSize: 14,
+        color: "#606060",
+    },
+    link: {
+        color: "#003580",
+        fontWeight: "bold",
     },
 });

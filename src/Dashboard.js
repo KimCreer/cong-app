@@ -1,6 +1,17 @@
 import React from "react";
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    ScrollView,
+    SafeAreaView,
+    Image,
+} from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { FontAwesome5 } from "@expo/vector-icons";
+import { createStackNavigator } from "@react-navigation/stack";
+import { useNavigation } from "@react-navigation/native";
+import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import LawsScreen from "./screens/LawsScreen";
 import ProjectsScreen from "./screens/ProjectsScreen";
 import ConcernsScreen from "./screens/ConcernsScreen";
@@ -9,18 +20,305 @@ import InfoScreen from "./screens/InfoScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
-function Dashboard() {
+function HomeScreen() {
+    const navigation = useNavigation();
+
     return (
-        <Tab.Navigator screenOptions={{ headerShown: false }}>
-            <Tab.Screen name="Laws" component={LawsScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="balance-scale" size={size} color={color} />) }} />
-            <Tab.Screen name="Projects" component={ProjectsScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="tasks" size={size} color={color} />) }} />
-            <Tab.Screen name="Concerns" component={ConcernsScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="comments" size={size} color={color} />) }} />
-            <Tab.Screen name="Updates" component={UpdatesScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="newspaper" size={size} color={color} />) }} />
-            <Tab.Screen name="Info" component={InfoScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="info-circle" size={size} color={color} />) }} />
-            <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarIcon: ({ color, size }) => (<FontAwesome5 name="user" size={size} color={color} />) }} />
+        <SafeAreaView style={styles.safeContainer}>
+            {/* HEADER */}
+            <View style={styles.header}>
+                <View style={styles.headerTop}>
+                    <Image
+                        source={{ uri: "https://via.placeholder.com/40" }}
+                        style={styles.profileImage}
+                    />
+                    <View>
+                        <Text style={styles.headerSubtitle}>Welcome Back!</Text>
+                        <Text style={styles.headerTitle}>User Name</Text>
+                    </View>
+                    <TouchableOpacity style={styles.helpButton}>
+                        <Text style={styles.helpText}>HELP</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* MAIN CONTENT */}
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                {/* SERVICE GRID */}
+                <View style={styles.serviceGrid}>
+                    {[
+                        { name: "Laws", icon: "balance-scale", color: "#003580", screen: "Laws" },
+                        { name: "Projects", icon: "tasks", color: "#FFD700", screen: "Projects" },
+                        { name: "Concerns", icon: "comments", color: "#003580", screen: "Concerns" },
+                        { name: "Updates", icon: "newspaper", color: "#FFD700", screen: "Updates" },
+                        { name: "Info", icon: "info-circle", color: "#003580", screen: "Info" },
+                        { name: "More", icon: "ellipsis-h", color: "#606060", screen: "More" },
+                    ].map((item, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            style={styles.serviceCard}
+                            onPress={() => navigation.navigate(item.screen)}
+                        >
+                            <FontAwesome5 name={item.icon} size={30} color={item.color} />
+                            <Text style={styles.serviceTitle}>{item.name}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* SECONDARY FEATURES */}
+                <Text style={styles.sectionTitle}>Do More</Text>
+                <View style={styles.quickAccess}>
+                    {[
+                        { name: "Community", icon: "people-outline", screen: "Community" },
+                        { name: "Reports", icon: "bar-chart", screen: "Reports" },
+                        { name: "Events", icon: "calendar", screen: "Events" },
+                        { name: "Feedback", icon: "feedback", screen: "Feedback" },
+                    ].map((item, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            style={styles.quickCard}
+                            onPress={() => navigation.navigate(item.screen)}
+                        >
+                            <Ionicons name={item.icon} size={26} color="#003580" />
+                            <Text style={styles.quickTitle}>{item.name}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* NEWS & UPDATES */}
+                <Text style={styles.sectionTitle}>Latest Updates</Text>
+                <TouchableOpacity style={styles.newsCard}>
+                    <Image
+                        source={{ uri: "https://via.placeholder.com/300x150" }}
+                        style={styles.newsImage}
+                    />
+                    <View style={styles.newsContent}>
+                        <Text style={styles.newsTitle}>New Bill Passed in Muntinlupa</Text>
+                        <Text style={styles.newsDesc}>
+                            Congressman Jimmy Fresnedi has recently signed a new bill...
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            </ScrollView>
+        </SafeAreaView>
+    );
+}
+
+function HomeStack() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="HomeMain" component={HomeScreen} />
+            <Stack.Screen name="Laws" component={LawsScreen} />
+            <Stack.Screen name="Projects" component={ProjectsScreen} />
+            <Stack.Screen name="Concerns" component={ConcernsScreen} />
+            <Stack.Screen name="Updates" component={UpdatesScreen} />
+            <Stack.Screen name="Info" component={InfoScreen} />
+        </Stack.Navigator>
+    );
+}
+
+
+export default function Dashboard() {
+    return (
+        <Tab.Navigator
+            screenOptions={{
+                headerShown: false,
+                tabBarStyle: styles.tabBar,
+                tabBarActiveTintColor: "#FFD700",
+                tabBarInactiveTintColor: "#FFFFFF",
+                tabBarShowLabel: true,
+            }}
+        >
+            <Tab.Screen
+                name="Home"
+                component={HomeStack}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <FontAwesome5 name="home" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Activity"
+                component={UpdatesScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <FontAwesome5 name="clipboard-list" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <FontAwesome5 name="user" size={size} color={color} />
+                    ),
+                }}
+            />
         </Tab.Navigator>
     );
 }
 
-export default Dashboard;
+
+// Styles
+const styles = StyleSheet.create({
+    safeContainer: {
+        flex: 1,
+        backgroundColor: "#F5F7FA",
+    },
+
+    /** HEADER **/
+    header: {
+        backgroundColor: "#003580",
+        paddingVertical: 20,
+        paddingHorizontal: 25,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        elevation: 3, // Shadow for Android
+        shadowColor: "#000",
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+    },
+    headerTop: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    profileImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        borderWidth: 2,
+        borderColor: "#FFD700",
+    },
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: "#FFFFFF",
+    },
+    headerSubtitle: {
+        fontSize: 14,
+        color: "#FFD700",
+    },
+    helpButton: {
+        backgroundColor: "#FFD700",
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 10,
+        elevation: 2,
+    },
+    helpText: {
+        fontWeight: "bold",
+        color: "#003580",
+        fontSize: 14,
+    },
+
+    /** MAIN CONTENT **/
+    scrollContainer: {
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+    },
+
+    /** SERVICE GRID **/
+    serviceGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+        marginBottom: 20,
+    },
+    serviceCard: {
+        width: "30%",
+        alignItems: "center",
+        backgroundColor: "#FFFFFF",
+        paddingVertical: 18,
+        marginTop:10,
+        borderRadius: 15,
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 },
+    },
+    serviceTitle: {
+        fontSize: 14,
+        fontWeight: "bold",
+        color: "#003580",
+        marginTop: 8,
+    },
+
+    /** SECTION TITLE **/
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginVertical: 15,
+        color: "#333",
+    },
+
+    /** QUICK ACCESS **/
+    quickAccess: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 20,
+    },
+    quickCard: {
+        alignItems: "center",
+        backgroundColor: "#FFFFFF",
+        paddingVertical: 12,
+        borderRadius: 15,
+        width: "22%",
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
+    },
+    quickTitle: {
+        fontSize: 12,
+        fontWeight: "bold",
+        marginTop: 6,
+        color: "#003580",
+    },
+
+    /** NEWS & UPDATES **/
+    newsCard: {
+        backgroundColor: "#FFF",
+        padding: 15,
+        borderRadius: 15,
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        marginTop: 15,
+    },
+    newsImage: {
+        width: "100%",
+        height: 130,
+        borderRadius: 12,
+    },
+    newsContent: {
+        marginTop: 10,
+    },
+    newsTitle: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#333",
+    },
+    newsDesc: {
+        fontSize: 13,
+        color: "#606060",
+        marginTop: 4,
+    },
+
+    /** TAB BAR **/
+    tabBar: {
+        backgroundColor: "#003580",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        height: 60,
+        elevation: 5,
+    },
+});
+

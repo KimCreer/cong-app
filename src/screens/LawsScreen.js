@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Icon from "react-native-vector-icons/FontAwesome5"; // or MaterialCommunityIcons
-
 import {
   View,
   Text,
@@ -46,6 +45,7 @@ export default function LawsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null); // Error state for data fetching
   const [savedItems, setSavedItems] = useState({});
+  const [retryCount, setRetryCount] = useState(0); // State to trigger retry
 
   // Animated values for header animation
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -154,13 +154,13 @@ export default function LawsScreen() {
         setRefreshing(false); // Stop refreshing animation
       }
     };
-
     refreshData();
   }, []);
 
+  // useEffect to trigger initial load and re-trigger animation on retry
   useEffect(() => {
     initialLoad();
-  }, []);
+  }, [retryCount]); // Depend on retryCount
 
   /**
    * Handles sharing functionality using React Native's Share API.
@@ -229,6 +229,12 @@ export default function LawsScreen() {
     return !!savedItems[key];
   };
 
+  // Retry function
+  const handleRetry = () => {
+    setRetryCount((prevCount) => prevCount + 1); // Increment retry count
+    setError(null);
+  };
+
   // Loading indicator or error message display
   if (loading) {
     return (
@@ -257,7 +263,7 @@ export default function LawsScreen() {
         <Text style={[styles.errorText, { color: dynamicStyles.textColor }]}>
           {error}
         </Text>
-        <TouchableOpacity onPress={onRefresh} style={styles.retryButton}>
+        <TouchableOpacity onPress={handleRetry} style={styles.retryButton}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -266,33 +272,64 @@ export default function LawsScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: dynamicStyles.backgroundColor }]}
-    >
-      <View
-        style={[styles.container, { backgroundColor: dynamicStyles.backgroundColor }]}
-      >
-       {/* Animated Header */}
-<Animated.View style={[styles.header, animatedHeaderStyle]}>
-  {/* Indicator dots */}
-  <View style={styles.indicatorContainer}>
-    <View style={[styles.dot, selectedSection === sectionKeys[0] ? styles.activeDot : styles.inactiveDot]} />
-    <View style={[styles.dot, selectedSection === sectionKeys[1] ? styles.activeDot : styles.inactiveDot]} />
-    <View style={[styles.dot, selectedSection === sectionKeys[2] ? styles.activeDot : styles.inactiveDot]} />
-  </View>
-
-  {/* Header with Icon */}
-  <View style={styles.headerContent}>
-    <Icon name="gavel" size={32} color="#ffffff" style={styles.headerIcon} />
-    <Animated.Text
       style={[
-        styles.headerTitle,
-        { opacity: headerTitleOpacity, textAlign: "center" },
+        styles.safeArea,
+        { backgroundColor: dynamicStyles.backgroundColor },
       ]}
     >
-      Laws & Legislation
-    </Animated.Text>
-  </View>
-</Animated.View>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: dynamicStyles.backgroundColor },
+        ]}
+      >
+        {/* Animated Header */}
+        <Animated.View style={[styles.header, animatedHeaderStyle]}>
+          {/* Indicator dots */}
+          <View style={styles.indicatorContainer}>
+            <View
+              style={[
+                styles.dot,
+                selectedSection === sectionKeys[0]
+                  ? styles.activeDot
+                  : styles.inactiveDot,
+              ]}
+            />
+            <View
+              style={[
+                styles.dot,
+                selectedSection === sectionKeys[1]
+                  ? styles.activeDot
+                  : styles.inactiveDot,
+              ]}
+            />
+            <View
+              style={[
+                styles.dot,
+                selectedSection === sectionKeys[2]
+                  ? styles.activeDot
+                  : styles.inactiveDot,
+              ]}
+            />
+          </View>
+          {/* Header with Icon */}
+          <View style={styles.headerContent}>
+            <Icon
+              name="gavel"
+              size={32}
+              color="#ffffff"
+              style={styles.headerIcon}
+            />
+            <Animated.Text
+              style={[
+                styles.headerTitle,
+                { opacity: headerTitleOpacity, textAlign: "center" },
+              ]}
+            >
+              Laws & Legislation
+            </Animated.Text>
+          </View>
+        </Animated.View>
 
         {/* Scrollable content */}
         <ScrollView
@@ -451,97 +488,37 @@ export default function LawsScreen() {
                                   <Text style={styles.boldText}>
                                     Amendments:
                                   </Text>
-                                  {item.amendments.join(", ") || "None"}
+                                  {item.amendments}
                                 </Text>
                               </>
-                            )}
-                            {/* Adding a link to view full text of the bill */}
-                            {item.fullLink && (
-                              <TouchableOpacity
-                                onPress={() => Linking.openURL(item.fullLink)}
-                              >
-                                <Text
-                                  style={[
-                                    styles.link,
-                                    styles.lawDetail,
-                                    { color: "#007bff" },
-                                  ]}
-                                >
-                                  View Full Text of Bill
-                                </Text>
-                              </TouchableOpacity>
                             )}
                           </View>
                         </>
                       )}
                     </Card.Content>
-                    {/* Action buttons for sharing or saving */}
-                    <Card.Actions style={styles.buttonContainer}>
-                      {/* Share button */}
+                    {/* Card Actions (e.g., Share, Save) */}
+                    <Card.Actions style={styles.cardActions}>
                       <TouchableOpacity
-                        onPress={() =>
-                          handleShare(
-                            `${item.title}\n\n${item.summary}\n\n${item.fullLink}`
-                          )
-                        }
                         style={styles.actionButton}
+                        onPress={() => handleShare(item.title)}
                       >
-                        <Feather
-                          name="share"
-                          size={18}
-                          color="#007bff"
-                          style={{ marginRight: 5 }}
-                        />
-                        <Text
-                          style={[
-                            styles.actionButtonText,
-                            { color: "#007bff" },
-                          ]}
-                        >
-                          Share
-                        </Text>
+                        <Feather name="share" size={20} color="#003366" />
+                        <Text style={styles.actionButtonText}>Share</Text>
                       </TouchableOpacity>
-                      {/* Save button */}
+
                       <TouchableOpacity
+                        style={styles.actionButton}
                         onPress={() => saveItem(item.title, item)}
                         disabled={isItemSaved(item.title)}
-                        style={styles.actionButton}
                       >
-                        {isItemSaved(item.title) ? (
-                          <>
-                            <MaterialIcons
-                              name="bookmark"
-                              size={18}
-                              color="gray"
-                              style={{ marginRight: 5 }}
-                            />
-                            <Text
-                              style={[
-                                styles.actionButtonText,
-                                { color: "gray" },
-                              ]}
-                            >
-                              Saved
-                            </Text>
-                          </>
-                        ) : (
-                          <>
-                            <MaterialIcons
-                              name="bookmark-border"
-                              size={18}
-                              color="#007bff"
-                              style={{ marginRight: 5 }}
-                            />
-                            <Text
-                              style={[
-                                styles.actionButtonText,
-                                { color: "#007bff" },
-                              ]}
-                            >
-                              Save
-                            </Text>
-                          </>
-                        )}
+                        <MaterialIcons
+                          name={isItemSaved(item.title) ? "bookmark" : "bookmark-border"}
+                          size={24}
+                          color="#003366"
+                        />
+                        <Text style={styles.actionButtonText}>
+                          {isItemSaved(item.title) ? "Saved" : "Save"}
+                        </Text>
                       </TouchableOpacity>
                     </Card.Actions>
                   </Card>
@@ -564,16 +541,42 @@ const styles = StyleSheet.create({
   },
   header: {
     width: "100%",
+    backgroundColor: "#003366",
+    paddingTop: 10,
+    paddingBottom: 20,
     alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    overflow: "hidden",
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  headerIcon: {
+    marginRight: 10,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "white",
-    paddingVertical: 15,
+    color: "#ffffff",
+  },
+  indicatorContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 5,
+  },
+  activeDot: {
+    backgroundColor: "#ffffff",
+  },
+  inactiveDot: {
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   contentScrollView: {
     flex: 1,
@@ -586,6 +589,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 15,
+    color: "#333333",
+    textAlign: "center",
   },
   card: {
     marginBottom: 15,
@@ -595,34 +600,38 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
+    color: "#333333",
+  },
+  committeeTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333333",
+    textAlign: "center",
   },
   lawDetailsContainer: {
     marginBottom: 10,
   },
   lawDetail: {
     fontSize: 14,
-    lineHeight: 20,
+    color: "#555555",
+    marginBottom: 5,
   },
   boldText: {
     fontWeight: "bold",
+    color: "#333333",
   },
-  link: {
-    marginTop: 5,
-    fontWeight: "bold",
-  },
-  buttonContainer: {
+  cardActions: {
     justifyContent: "space-around",
+    padding: 8,
   },
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 5,
   },
   actionButtonText: {
-    fontSize: 16,
-    fontWeight: "500",
+    marginLeft: 5,
+    color: "#003366",
   },
   loadingContainer: {
     flex: 1,
@@ -632,6 +641,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
+    color: "#333333",
   },
   errorContainer: {
     flex: 1,
@@ -641,50 +651,20 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 18,
+    color: "#cc0000",
     marginBottom: 20,
     textAlign: "center",
   },
   retryButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#003366",
     padding: 10,
     borderRadius: 5,
   },
   retryButtonText: {
-    color: "white",
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "bold",
+    textAlign: "center",
   },
-  committeeTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-    indicatorContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    top: 10,
-    left: 0,
-    right: 0,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginHorizontal: 5,
-  },
-  activeDot: {
-    backgroundColor: '#FFFFFF',
-  },
-  inactiveDot: {
-    backgroundColor: '#888888',
-  },
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8, // Adjust spacing between icon and text
-  },
-  
 });
+
